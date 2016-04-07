@@ -20,6 +20,7 @@ import javafx.stage.Stage;
 /**
  *
  * @author gebruiker-pc
+ * @author Jeroen Janssen
  */
 public class AEXBanner extends Application
 {
