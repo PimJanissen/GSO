@@ -6,6 +6,9 @@
 package aexbanner;
 
 import business.bannercontroller.BannerController;
+import java.rmi.RemoteException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -22,8 +25,7 @@ import javafx.stage.Stage;
  * @author gebruiker-pc
  * @author Jeroen Janssen
  */
-public class AEXBanner extends Application
-{
+public class AEXBanner extends Application {
 
     public static final int WIDTH = 1000;
     public static final int HEIGHT = 100;
@@ -38,10 +40,13 @@ public class AEXBanner extends Application
     private AnimationTimer animationTimer;
 
     @Override
-    public void start(Stage primaryStage)
-    {
+    public void start(Stage primaryStage) {
 
-        controller = new BannerController(this);
+        try {
+            controller = new BannerController(this);
+        } catch (RemoteException ex) {
+            Logger.getLogger(AEXBanner.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         Font font = new Font("Arial", HEIGHT);
         text = new Text();
@@ -52,22 +57,17 @@ public class AEXBanner extends Application
         root.getChildren().add(text);
         Scene scene = new Scene(root, WIDTH, HEIGHT);
         scene.addEventHandler(KeyEvent.KEY_PRESSED, (key)
-                -> 
-                {
-                    if (key.getCode() == KeyCode.LEFT)
-                    {
-                        if (TEXT_MOVEMENT_SPEED < 15)
-                        {
-                            TEXT_MOVEMENT_SPEED++;
-                        }
-                    }
-                    if (key.getCode() == KeyCode.RIGHT)
-                    {
-                        if (TEXT_MOVEMENT_SPEED > 0)
-                        {
-                            TEXT_MOVEMENT_SPEED--;
-                        }
-                    }
+                -> {
+            if (key.getCode() == KeyCode.LEFT) {
+                if (TEXT_MOVEMENT_SPEED < 15) {
+                    TEXT_MOVEMENT_SPEED++;
+                }
+            }
+            if (key.getCode() == KeyCode.RIGHT) {
+                if (TEXT_MOVEMENT_SPEED > 0) {
+                    TEXT_MOVEMENT_SPEED--;
+                }
+            }
         });
 
         primaryStage.setTitle("AEX banner");
@@ -76,24 +76,18 @@ public class AEXBanner extends Application
         primaryStage.toFront();
 
         // Start animation: text moves from right to left
-        animationTimer = new AnimationTimer()
-        {
+        animationTimer = new AnimationTimer() {
             private long prevUpdate;
 
             @Override
-            public void handle(long now)
-            {
+            public void handle(long now) {
                 long lag = now - prevUpdate;
-                if (lag >= NANO_TICKS)
-                {
+                if (lag >= NANO_TICKS) {
                     // calculate new location of text
 
-                    if (textPosition > -1 * text.getLayoutBounds().getWidth())
-                    {
+                    if (textPosition > -1 * text.getLayoutBounds().getWidth()) {
                         textPosition -= TEXT_MOVEMENT_SPEED;
-                    }
-                    else
-                    {
+                    } else {
                         textPosition = WIDTH;
                     }
 
@@ -103,8 +97,7 @@ public class AEXBanner extends Application
             }
 
             @Override
-            public void start()
-            {
+            public void start() {
                 prevUpdate = System.nanoTime();
                 textPosition = WIDTH;
                 text.relocate(textPosition, 0);
@@ -116,21 +109,16 @@ public class AEXBanner extends Application
         animationTimer.start();
     }
 
-    public void setKoersen(String koersen)
-    {
-        try
-        {
+    public void setKoersen(String koersen) {
+        try {
             text.setText(koersen);
             textLength = text.getLayoutBounds().getWidth();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
         }
     }
 
     @Override
-    public void stop()
-    {
+    public void stop() {
         animationTimer.stop();
         controller.stop();
     }
@@ -138,8 +126,7 @@ public class AEXBanner extends Application
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         launch(args);
     }
 

@@ -6,15 +6,15 @@
 package business.effectenbeurs;
 
 import business.effectenbeurs.fonds.IFonds;
+import java.rmi.Remote;
 import java.util.List;
-import javafx.beans.Observable;
 
 /**
  *
  * @author gebruiker-pc
  */
-public interface IEffectenbeurs extends Observable
-{
+public interface IEffectenbeurs extends Remote {
+
 
     List<IFonds> getKoersen();
 }
