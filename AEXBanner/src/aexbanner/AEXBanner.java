@@ -9,6 +9,8 @@ import business.bannercontroller.BannerController;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -25,6 +27,7 @@ public class AEXBanner extends Application
     public static final int WIDTH = 1000;
     public static final int HEIGHT = 100;
     public static final int NANO_TICKS = 20000000;
+    private static int TEXT_MOVEMENT_SPEED = 6;
     // FRAME_RATE = 1000000000/NANO_TICKS = 50;
 
     private Text text;
@@ -47,6 +50,24 @@ public class AEXBanner extends Application
         Pane root = new Pane();
         root.getChildren().add(text);
         Scene scene = new Scene(root, WIDTH, HEIGHT);
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, (key)
+                -> 
+                {
+                    if (key.getCode() == KeyCode.LEFT)
+                    {
+                        if (TEXT_MOVEMENT_SPEED < 15)
+                        {
+                            TEXT_MOVEMENT_SPEED++;
+                        }
+                    }
+                    if (key.getCode() == KeyCode.RIGHT)
+                    {
+                        if (TEXT_MOVEMENT_SPEED > 0)
+                        {
+                            TEXT_MOVEMENT_SPEED--;
+                        }
+                    }
+        });
 
         primaryStage.setTitle("AEX banner");
         primaryStage.setScene(scene);
@@ -65,7 +86,16 @@ public class AEXBanner extends Application
                 if (lag >= NANO_TICKS)
                 {
                     // calculate new location of text
-                    // TODO
+
+                    if (textPosition > -1 * text.getLayoutBounds().getWidth())
+                    {
+                        textPosition -= TEXT_MOVEMENT_SPEED;
+                    }
+                    else
+                    {
+                        textPosition = WIDTH;
+                    }
+
                     text.relocate(textPosition, 0);
                     prevUpdate = now;
                 }
@@ -77,6 +107,7 @@ public class AEXBanner extends Application
                 prevUpdate = System.nanoTime();
                 textPosition = WIDTH;
                 text.relocate(textPosition, 0);
+
                 setKoersen("Nothing to display");
                 super.start();
             }
@@ -86,8 +117,14 @@ public class AEXBanner extends Application
 
     public void setKoersen(String koersen)
     {
-        text.setText(koersen);
-        textLength = text.getLayoutBounds().getWidth();
+        try
+        {
+            text.setText(koersen);
+            textLength = text.getLayoutBounds().getWidth();
+        }
+        catch (Exception ex)
+        {
+        }
     }
 
     @Override

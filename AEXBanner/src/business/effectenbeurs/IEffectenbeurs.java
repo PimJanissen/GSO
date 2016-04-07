@@ -7,12 +7,13 @@ package business.effectenbeurs;
 
 import business.effectenbeurs.fonds.IFonds;
 import java.util.List;
+import javafx.beans.Observable;
 
 /**
  *
  * @author gebruiker-pc
  */
-public interface IEffectenbeurs
+public interface IEffectenbeurs extends Observable
 {
 
     List<IFonds> getKoersen();
