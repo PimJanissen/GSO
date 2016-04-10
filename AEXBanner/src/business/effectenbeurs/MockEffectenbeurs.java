@@ -7,6 +7,10 @@ package business.effectenbeurs;
 
 import business.effectenbeurs.fonds.Fonds;
 import business.effectenbeurs.fonds.IFonds;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,11 +19,15 @@ import java.util.Observable;
 /**
  *
  * @author gebruiker-pc
+ * @author Jeroen Janssen
  */
 public class MockEffectenbeurs extends Observable implements IEffectenbeurs
 {
 
     private final ArrayList<IFonds> koersen;
+    private static final int PORTNUMBER = 1099;
+    private static final String BINDINGNAME = "MockEffectenbeurs";
+    private Registry registry;
 
     @Override
     public List<IFonds> getKoersen()
@@ -27,9 +35,11 @@ public class MockEffectenbeurs extends Observable implements IEffectenbeurs
         return Collections.unmodifiableList(this.koersen);
     }
 
-    public MockEffectenbeurs()
+    public MockEffectenbeurs() throws RemoteException
     {
         this.koersen = this.fillKoersen();
+        registry = LocateRegistry.createRegistry(PORTNUMBER);
+        UnicastRemoteObject.exportObject(this, 0);
     }
 
     private ArrayList<IFonds> fillKoersen()
@@ -58,5 +68,10 @@ public class MockEffectenbeurs extends Observable implements IEffectenbeurs
         this.setChanged();
         this.notifyObservers();
     }
+    
+    public static void Main(String[] args) throws RemoteException{
+        MockEffectenbeurs mockEffectenbeurs= new MockEffectenbeurs();
+    }
+    
 
 }

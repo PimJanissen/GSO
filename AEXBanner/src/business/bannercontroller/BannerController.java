@@ -11,6 +11,7 @@ import business.effectenbeurs.MockEffectenbeurs;
 import business.effectenbeurs.UpdateTimerTask;
 import business.effectenbeurs.fonds.Fonds;
 import business.effectenbeurs.fonds.IFonds;
+import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -27,7 +28,7 @@ public class BannerController implements Observer
     private final IEffectenbeurs effectenbeurs;
     private final Timer pollingTimer;
 
-    public BannerController(AEXBanner banner)
+    public BannerController(AEXBanner banner) throws RemoteException
     {
 
         this.banner = banner;

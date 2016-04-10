@@ -5,11 +5,13 @@
  */
 package business.effectenbeurs.fonds;
 
+import java.io.Serializable;
+
 /**
  *
  * @author gebruiker-pc
  */
-public interface IFonds
+public interface IFonds extends Serializable
 {
     String getNaam();
     double getKoers();
