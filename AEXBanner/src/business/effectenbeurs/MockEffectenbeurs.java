@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
-import javafx.beans.InvalidationListener;
 
 /**
  *
@@ -58,18 +57,6 @@ public class MockEffectenbeurs extends Observable implements IEffectenbeurs
         
         this.setChanged();
         this.notifyObservers();
-    }
-
-    @Override
-    public void addListener(InvalidationListener listener)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void removeListener(InvalidationListener listener)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }
