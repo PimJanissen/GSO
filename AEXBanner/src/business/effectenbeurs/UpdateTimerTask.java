@@ -5,7 +5,7 @@
  */
 package business.effectenbeurs;
 
-import business.bannercontroller.BannerController;
+import aexbanner.AEXBanner;
 import java.util.TimerTask;
 
 /**
@@ -15,21 +15,15 @@ import java.util.TimerTask;
 public class UpdateTimerTask extends TimerTask
 {
 
-    private BannerController bannerController;
     private IEffectenbeurs iEffectenbeurs;
 
-    public UpdateTimerTask(BannerController bannerController, IEffectenbeurs effectenbeurs)
+    public UpdateTimerTask(IEffectenbeurs effectenbeurs)
     {
-        if (bannerController == null)
-        {
-            throw new IllegalArgumentException("bannerController can not be null.");
-        }
         if (effectenbeurs == null)
         {
             throw new IllegalArgumentException("effectenbeurs can not be null.");
         }
 
-        this.bannerController = bannerController;
         this.iEffectenbeurs = effectenbeurs;
     }
 
@@ -37,10 +31,7 @@ public class UpdateTimerTask extends TimerTask
 
     public void run()
     {
-        MockEffectenbeurs mockEffectenBeurs = (MockEffectenbeurs)this.iEffectenbeurs;
-
-        mockEffectenBeurs.addObserver(this.bannerController);
-        
-        mockEffectenBeurs.updateKoersen();
+        MockEffectenbeurs mockEffectenbeurs = (MockEffectenbeurs) this.iEffectenbeurs;
+        mockEffectenbeurs.updateKoersen();
     }
 }

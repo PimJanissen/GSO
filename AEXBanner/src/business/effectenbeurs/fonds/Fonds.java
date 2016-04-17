@@ -5,13 +5,14 @@
  */
 package business.effectenbeurs.fonds;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
  *
  * @author gebruiker-pc
  */
-public class Fonds implements IFonds
+public class Fonds implements IFonds, Serializable
 {
 
     private final String naam;

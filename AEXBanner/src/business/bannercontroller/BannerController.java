@@ -8,50 +8,35 @@ package business.bannercontroller;
 import aexbanner.AEXBanner;
 import business.effectenbeurs.IEffectenbeurs;
 import business.effectenbeurs.MockEffectenbeurs;
-import business.effectenbeurs.UpdateTimerTask;
 import business.effectenbeurs.fonds.Fonds;
 import business.effectenbeurs.fonds.IFonds;
+import fontyspublisher.IRemotePropertyListener;
+import java.beans.PropertyChangeEvent;
 import java.rmi.RemoteException;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Timer;
 
 /**
  *
  * @author gebruiker-pc
  */
-public class BannerController implements Observer
+public class BannerController
 {
 
     private final AEXBanner banner;
     private final IEffectenbeurs effectenbeurs;
-    private final Timer pollingTimer;
 
     public BannerController(AEXBanner banner) throws RemoteException
     {
-
         this.banner = banner;
-        this.effectenbeurs = new MockEffectenbeurs();
-
-        // Start polling timer: update banner every two seconds
-        pollingTimer = new Timer();
-        pollingTimer.schedule(new UpdateTimerTask(this, this.effectenbeurs), 0, 2000);
-
+        this.effectenbeurs = this.banner.iEffectenbeurs;
+        this.effectenbeurs.registerProperty("koersen");
+        this.effectenbeurs.subscribeRemoteListener(new KoersenListener(this), "koersen");
     }
 
-    // Stop banner controller
-    public void stop()
+    protected void updateBanner()
     {
-        pollingTimer.cancel();
-        // Stop simulation timer of effectenbeurs
-        // TODO
-    }
-
-    @Override
-    public void update(Observable o, Object arg)
-    {
-        banner.setKoersen(this.genereerKoersenTekst(this.effectenbeurs.getKoersen()));
+        MockEffectenbeurs mockEffectenbeurs = (MockEffectenbeurs) this.effectenbeurs;
+        this.banner.setKoersen(this.genereerKoersenTekst(mockEffectenbeurs.getKoersen()));
     }
 
     private String genereerKoersenTekst(List<IFonds> fondsen)
@@ -62,14 +47,14 @@ public class BannerController implements Observer
         {
             Fonds fonds = (Fonds) iFonds;
 
-            String koers = Double.toString((double)Math.round(fonds.getKoers() * 1000) / 1000);
+            String koers = Double.toString((double) Math.round(fonds.getKoers() * 1000) / 1000);
             int puntIndex = koers.indexOf(".");
-            
+
             while (koers.substring(puntIndex + 1).length() != 3)
             {
                 koers += "0";
-            }   
-            
+            }
+
             koersenTekst += String.format(" %s %s ", fonds.getNaam(), koers);
 
             if (fondsen.indexOf(iFonds) != fondsen.size() - 1)
@@ -79,6 +64,23 @@ public class BannerController implements Observer
         }
 
         return koersenTekst + "-->";
+    }
+
+    private class KoersenListener implements IRemotePropertyListener
+    {
+
+        private final BannerController bannerController;
+
+        public KoersenListener(BannerController bannerController)
+        {
+            this.bannerController = bannerController;
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt)
+        {
+            this.bannerController.updateBanner();
+        }
     }
 
 }

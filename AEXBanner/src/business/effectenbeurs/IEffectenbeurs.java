@@ -6,6 +6,8 @@
 package business.effectenbeurs;
 
 import business.effectenbeurs.fonds.IFonds;
+import fontyspublisher.IRemotePublisherForDomain;
+import fontyspublisher.IRemotePublisherForListener;
 import java.rmi.Remote;
 import java.util.List;
 
@@ -13,8 +15,7 @@ import java.util.List;
  *
  * @author gebruiker-pc
  */
-public interface IEffectenbeurs extends Remote {
-
+public interface IEffectenbeurs extends Remote, IRemotePublisherForDomain, IRemotePublisherForListener {
 
     List<IFonds> getKoersen();
 }
