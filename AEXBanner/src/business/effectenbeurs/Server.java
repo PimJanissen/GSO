@@ -23,19 +23,19 @@ public class Server extends Application
     private static final int PORT = 1099;
     private static final String BINDINGNAME = "MockEffectenbeurs";
 
-    private MockEffectenbeurs mockEffectenbeurs;
+    private IEffectenbeurs effectenbeurs;
 
     public Server()
     {
         try
         {
-            this.mockEffectenbeurs = new MockEffectenbeurs();
+            this.effectenbeurs = new MockEffectenbeurs();
             Registry registry = LocateRegistry.createRegistry(PORT);
-            registry.rebind(BINDINGNAME, this.mockEffectenbeurs);
+            registry.rebind(BINDINGNAME, this.effectenbeurs);
         }
         catch (RemoteException ex)
         {
-            Logger.getLogger(MockEffectenbeurs.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

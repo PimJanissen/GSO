@@ -8,17 +8,34 @@ package business.effectenbeurs;
 import business.effectenbeurs.fonds.IFonds;
 import fontyspublisher.IRemotePropertyListener;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
 /**
  *
  * @author gebruiker-pc
  */
-public class Effectenbeurs implements IEffectenbeurs
+public class Effectenbeurs extends UnicastRemoteObject implements IEffectenbeurs
 {
 
+    public Effectenbeurs() throws RemoteException
+    {
+        
+    }
     @Override
     public List<IFonds> getKoersen()
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void subscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void unsubscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -46,17 +63,4 @@ public class Effectenbeurs implements IEffectenbeurs
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
-    @Override
-    public void subscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void unsubscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }

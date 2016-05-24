@@ -8,46 +8,49 @@ package business.effectenbeurs;
 import business.effectenbeurs.fonds.Fonds;
 import business.effectenbeurs.fonds.IFonds;
 import fontyspublisher.IRemotePropertyListener;
-import fontyspublisher.RemotePublisher;
-import java.io.Serializable;
+import fontyspublisher.Publisher;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author gebruiker-pc
  * @author Jeroen Janssen
  */
-public class MockEffectenbeurs implements IEffectenbeurs, Serializable
+public class MockEffectenbeurs extends UnicastRemoteObject implements IEffectenbeurs
 {
 
-    private final transient RemotePublisher remotePublisher;
     private final ArrayList<IFonds> koersen;
     private final transient Timer updateTimer;
-
-    @Override
-    public List<IFonds> getKoersen()
-    {
-        return Collections.unmodifiableList(this.koersen);
-    }
+    private final Publisher publisher;
 
     public MockEffectenbeurs() throws RemoteException
     {
+        this.publisher = new Publisher();
+        this.publisher.registerProperty("koersen");
+        
         this.koersen = this.fillKoersen();
 
         this.updateTimer = new Timer();
         this.updateTimer.schedule(new UpdateTimerTask(this), 0, 2000);
-
-        this.remotePublisher = new RemotePublisher();
     }
 
     // Stop banner controller
     public void stop()
     {
         this.updateTimer.cancel();
+    }
+
+    @Override
+    public List<IFonds> getKoersen() throws RemoteException
+    {
+        return Collections.unmodifiableList(this.koersen);
     }
 
     private ArrayList<IFonds> fillKoersen()
@@ -67,63 +70,55 @@ public class MockEffectenbeurs implements IEffectenbeurs, Serializable
     }
 
     protected void updateKoersen()
-    {
+    {        
         for (IFonds iFonds : this.koersen)
         {
             ((Fonds) iFonds).updateKoers();
         }
+        
+        try
+        {
+            this.inform("koersen", null, this.getKoersen());
+        }
+        catch (RemoteException ex)
+        {
+            Logger.getLogger(MockEffectenbeurs.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
-    /**
-     * Register property. Register property at this publisher. From now on
-     * listeners can subscribe to this property. Nothing changes in case given
-     * property was already registered.
-     *
-     * @param property empty string not allowed
-     * @throws java.rmi.RemoteException
-     */
     @Override
     public void registerProperty(String property) throws RemoteException
     {
-        this.remotePublisher.registerProperty(property);
+        publisher.registerProperty(property);
     }
 
-    /**
-     * Unregister property. Unregister property at this publisher. From now on
-     * listeners subscribed to this property will not be informed on changes. In
-     * case given property is null-String, all properties (except null) will be
-     * unregistered.
-     *
-     * @param property registered property at this publisher
-     * @throws java.rmi.RemoteException
-     */
     @Override
     public void unregisterProperty(String property) throws RemoteException
     {
-        this.remotePublisher.unregisterProperty(property);
-    }
-
-    @Override
-    public void inform(String property, Object oldValue, Object newValue) throws RemoteException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<String> getProperties() throws RemoteException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        publisher.unregisterProperty(property);
     }
 
     @Override
     public void subscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
     {
-        this.remotePublisher.subscribeRemoteListener(listener, property);
+        this.publisher.subscribeRemoteListener(listener, property);
     }
 
     @Override
     public void unsubscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
     {
-        this.remotePublisher.subscribeRemoteListener(listener, property);
+        this.publisher.unsubscribeRemoteListener(listener, property);
+    }
+
+    @Override
+    public void inform(String property, Object oldValue, Object newValue) throws RemoteException
+    {
+        this.publisher.inform(property, oldValue, newValue);
+    }
+
+    @Override
+    public List<String> getProperties() throws RemoteException
+    {
+        return this.publisher.getProperties();
     }
 }

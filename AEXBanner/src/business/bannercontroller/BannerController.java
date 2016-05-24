@@ -7,13 +7,15 @@ package business.bannercontroller;
 
 import aexbanner.AEXBanner;
 import business.effectenbeurs.IEffectenbeurs;
-import business.effectenbeurs.MockEffectenbeurs;
 import business.effectenbeurs.fonds.Fonds;
 import business.effectenbeurs.fonds.IFonds;
 import fontyspublisher.IRemotePropertyListener;
 import java.beans.PropertyChangeEvent;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -29,14 +31,20 @@ public class BannerController
     {
         this.banner = banner;
         this.effectenbeurs = this.banner.iEffectenbeurs;
-        this.effectenbeurs.registerProperty("koersen");
+
         this.effectenbeurs.subscribeRemoteListener(new KoersenListener(this), "koersen");
     }
 
     protected void updateBanner()
     {
-        MockEffectenbeurs mockEffectenbeurs = (MockEffectenbeurs) this.effectenbeurs;
-        this.banner.setKoersen(this.genereerKoersenTekst(mockEffectenbeurs.getKoersen()));
+        try
+        {
+            this.banner.setKoersen(this.genereerKoersenTekst(this.effectenbeurs.getKoersen()));
+        }
+        catch (RemoteException ex)
+        {
+            Logger.getLogger(BannerController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private String genereerKoersenTekst(List<IFonds> fondsen)
@@ -66,12 +74,11 @@ public class BannerController
         return koersenTekst + "-->";
     }
 
-    private class KoersenListener implements IRemotePropertyListener
+    private class KoersenListener extends UnicastRemoteObject implements IRemotePropertyListener
     {
-
         private final BannerController bannerController;
 
-        public KoersenListener(BannerController bannerController)
+        public KoersenListener(BannerController bannerController) throws RemoteException
         {
             this.bannerController = bannerController;
         }
