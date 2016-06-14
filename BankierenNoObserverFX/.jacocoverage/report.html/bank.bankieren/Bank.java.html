@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="nl"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Bank.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;BankierenNoObserverFX&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">bank.bankieren</a> &gt; <span class="el_source">Bank.java</span></div><h1>Bank.java</h1><pre class="source lang-java linenums">package bank.bankieren;
+
+import fontys.util.*;
+
+import java.util.*;
+
+public class Bank implements IBank
+{
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = -8728841131739353765L;
+	private Map&lt;Integer, IRekeningTbvBank&gt; accounts;
+	private Collection&lt;IKlant&gt; clients;
+	private int nieuwReknr;
+	private String name;
+
+	public Bank(String name)
+<span class="fc" id="L20">	{</span>
+<span class="fc" id="L21">		accounts = new HashMap&lt;Integer, IRekeningTbvBank&gt;();</span>
+<span class="fc" id="L22">		clients = new ArrayList&lt;IKlant&gt;();</span>
+<span class="fc" id="L23">		nieuwReknr = 100000000;</span>
+<span class="fc" id="L24">		this.name = name;</span>
+<span class="fc" id="L25">	}</span>
+
+	public int openRekening(String name, String city)
+	{
+<span class="fc bfc" id="L29" title="All 4 branches covered.">		if (name == null || city == null)</span>
+		{
+<span class="fc" id="L31">			throw new IllegalArgumentException();</span>
+		}
+
+<span class="fc bfc" id="L34" title="All 4 branches covered.">		if (name.equals(&quot;&quot;) || city.equals(&quot;&quot;))</span>
+		{
+<span class="fc" id="L36">			return -1;</span>
+		}
+
+<span class="fc" id="L39">		IKlant klant = getKlant(name, city);</span>
+<span class="fc" id="L40">		IRekeningTbvBank account = new Rekening(nieuwReknr, klant, Money.EURO);</span>
+<span class="fc" id="L41">		accounts.put(nieuwReknr, account);</span>
+<span class="fc" id="L42">		nieuwReknr++;</span>
+<span class="fc" id="L43">		return nieuwReknr - 1;</span>
+	}
+
+	private IKlant getKlant(String name, String city)
+	{
+<span class="fc bfc" id="L48" title="All 2 branches covered.">		for (IKlant k : clients)</span>
+		{
+<span class="pc bpc" id="L50" title="3 of 4 branches missed.">			if (k.getNaam().equals(name) &amp;&amp; k.getPlaats().equals(city))</span>
+			{
+<span class="nc" id="L52">				return k;</span>
+			}
+<span class="fc" id="L54">		}</span>
+<span class="fc" id="L55">		IKlant klant = new Klant(name, city);</span>
+<span class="fc" id="L56">		clients.add(klant);</span>
+<span class="fc" id="L57">		return klant;</span>
+	}
+
+	public IRekening getRekening(int nr)
+	{
+<span class="fc" id="L62">		return accounts.get(nr);</span>
+	}
+
+	public boolean maakOver(int source, int destination, Money money)
+			throws NumberDoesntExistException
+	{
+
+<span class="fc bfc" id="L69" title="All 2 branches covered.">		if (money == null)</span>
+		{
+<span class="fc" id="L71">			throw new IllegalArgumentException();</span>
+		}
+
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		if (source == destination)</span>
+		{
+<span class="fc" id="L76">			throw new IllegalArgumentException(</span>
+					&quot;cannot transfer money to your own account&quot;);
+		}
+<span class="fc bfc" id="L79" title="All 2 branches covered.">		if (!money.isPositive())</span>
+		{
+<span class="fc" id="L81">			throw new IllegalArgumentException(&quot;money must be positive&quot;);</span>
+		}
+
+<span class="fc" id="L84">		IRekeningTbvBank source_account = (IRekeningTbvBank) getRekening(source);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">		if (source_account == null)</span>
+		{
+<span class="fc" id="L87">			throw new NumberDoesntExistException(&quot;account &quot; + source</span>
+					+ &quot; unknown at &quot; + name);
+		}
+
+<span class="fc" id="L91">		Money negative = Money.difference(new Money(0, money.getCurrency()),</span>
+				money);
+<span class="fc" id="L93">		boolean success = source_account.muteer(negative);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">		if (!success)</span>
+		{
+<span class="fc" id="L96">			return false;</span>
+		}
+
+<span class="fc" id="L99">		IRekeningTbvBank dest_account = (IRekeningTbvBank) getRekening(destination);</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">		if (dest_account == null)</span>
+		{
+<span class="fc" id="L102">			throw new NumberDoesntExistException(&quot;account &quot; + destination</span>
+					+ &quot; unknown at &quot; + name);
+		}
+<span class="fc" id="L105">		success = dest_account.muteer(money);</span>
+
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">		if (!success) // rollback</span>
+		{
+<span class="nc" id="L109">			source_account.muteer(money);</span>
+		}
+<span class="fc" id="L111">		return success;</span>
+	}
+
+	@Override
+	public String getName()
+	{
+<span class="fc" id="L117">		return name;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

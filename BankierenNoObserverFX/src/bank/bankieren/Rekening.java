@@ -1,80 +1,118 @@
 package bank.bankieren;
 
-class Rekening implements IRekeningTbvBank {
+import fontyspublisher.IRemotePropertyListener;
+import fontyspublisher.Publisher;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
-    private static final long serialVersionUID = 7221569686169173632L;
-    private static final int KREDIETLIMIET = -10000;
-    private int nr;
-    private IKlant eigenaar;
-    private Money saldo;
+class Rekening extends UnicastRemoteObject implements IRekeningTbvBank
+{
 
-    /**
-     * creatie van een bankrekening met saldo van 0.0<br>
-     * de constructor heeft package-access omdat de PersistentAccount-objecten door een
-     * het PersistentBank-object worden beheerd
-     * @see banking.persistence.PersistentBank
-     * @param number het bankrekeningnummer
-     * @param klant de eigenaar van deze rekening
-     * @param currency de munteenheid waarin het saldo is uitgedrukt
-     */
-    Rekening(int number, IKlant klant, String currency) {
-        this(number, klant, new Money(0, currency));
-    }
+	private static final long serialVersionUID = 7221569686169173632L;
+	private static final int KREDIETLIMIET = -10000;
 
-    /**
-     * creatie van een bankrekening met saldo saldo<br>
-     * de constructor heeft package-access omdat de PersistentAccount-objecten door een
-     * het PersistentBank-object worden beheerd
-     * @see banking.persistence.PersistentBank
-     * @param number het bankrekeningnummer
-     * @param name de naam van de eigenaar
-     * @param city de woonplaats van de eigenaar
-     * @param currency de munteenheid waarin het saldo is uitgedrukt
-     */
-    Rekening(int number, IKlant klant, Money saldo) {
-        this.nr = number;
-        this.eigenaar = klant;
-        this.saldo = saldo;
-    }
+	private final transient Publisher publisher;
+	private int nr;
+	private IKlant eigenaar;
+	private Money saldo;
 
-    public boolean equals(Object obj) {
-        return nr == ((IRekening) obj).getNr();
-    }
+	/**
+	 * creatie van een bankrekening met saldo van 0.0<br>
+	 * de constructor heeft package-access omdat de PersistentAccount-objecten
+	 * door een het PersistentBank-object worden beheerd
+	 *
+	 * @see banking.persistence.PersistentBank
+	 * @param number het bankrekeningnummer
+	 * @param klant de eigenaar van deze rekening
+	 * @param currency de munteenheid waarin het saldo is uitgedrukt
+	 */
+	Rekening(int number, IKlant klant, String currency) throws RemoteException
+	{
+		this(number, klant, new Money(0, currency));
+	}
 
-    public int getNr() {
-        return nr;
-    }
+	/**
+	 * creatie van een bankrekening met saldo saldo<br>
+	 * de constructor heeft package-access omdat de PersistentAccount-objecten
+	 * door een het PersistentBank-object worden beheerd
+	 *
+	 * @see banking.persistence.PersistentBank
+	 * @param number het bankrekeningnummer
+	 * @param name de naam van de eigenaar
+	 * @param city de woonplaats van de eigenaar
+	 * @param currency de munteenheid waarin het saldo is uitgedrukt
+	 */
+	Rekening(int number, IKlant klant, Money saldo) throws RemoteException
+	{
+		this.nr = number;
+		this.eigenaar = klant;
+		this.saldo = saldo;
 
-    public String toString() {
-        return nr + ": " + eigenaar.toString();
-    }
+		this.publisher = new Publisher();
+		this.publisher.registerProperty("Saldo");
+	}
 
-    boolean isTransferPossible(Money bedrag) {
-        return (bedrag.getCents() + saldo.getCents() >= KREDIETLIMIET);
-    }
+	public boolean equals(Object obj)
+	{
+		return nr == ((IRekening) obj).getNr();
+	}
 
-    public IKlant getEigenaar() {
-        return eigenaar;
-    }
+	public int getNr()
+	{
+		return nr;
+	}
 
-    public Money getSaldo() {
-        return saldo;
-    }
+	public String toString()
+	{
+		return nr + ": " + eigenaar.toString();
+	}
 
-    public boolean muteer(Money bedrag) {
-        if (bedrag.getCents() == 0) {
-            throw new RuntimeException(" bedrag = 0 bij aanroep 'muteer'");
-        }
+	boolean isTransferPossible(Money bedrag)
+	{
+		return (bedrag.getCents() + saldo.getCents() >= KREDIETLIMIET);
+	}
 
-        if (isTransferPossible(bedrag)) {
-            saldo = Money.sum(saldo, bedrag);
-            return true;
-        }
-        return false;
-    }
+	public IKlant getEigenaar()
+	{
+		return eigenaar;
+	}
 
-    @Override
-    public int getKredietLimietInCenten() {
-        return KREDIETLIMIET;
-    }
+	public Money getSaldo()
+	{
+		return saldo;
+	}
+
+	public boolean muteer(Money bedrag)
+	{
+		if (bedrag.getCents() == 0)
+		{
+			throw new RuntimeException(" bedrag = 0 bij aanroep 'muteer'");
+		}
+
+		if (isTransferPossible(bedrag))
+		{
+			saldo = Money.sum(saldo, bedrag);
+			this.publisher.inform("Saldo", null, saldo);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public int getKredietLimietInCenten()
+	{
+		return KREDIETLIMIET;
+	}
+
+	@Override
+	public void subscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
+	{
+		this.publisher.subscribeRemoteListener(listener, property);
+	}
+
+	@Override
+	public void unsubscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
+	{
+		this.publisher.unsubscribeRemoteListener(listener, property);
+	}
 }
