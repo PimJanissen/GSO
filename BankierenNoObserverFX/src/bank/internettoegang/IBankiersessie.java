@@ -1,15 +1,16 @@
 package bank.internettoegang;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import bank.bankieren.IRekening;
 import bank.bankieren.Money;
 import fontys.util.InvalidSessionException;
 import fontys.util.NumberDoesntExistException;
+import fontyspublisher.IRemotePublisherForListener;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-public interface IBankiersessie extends Remote {
+public interface IBankiersessie extends Remote, IRemotePublisherForListener {
 	
-	long GELDIGHEIDSDUUR = 1000; 
+	long GELDIGHEIDSDUUR = 60000; 
 	/**
 	 * @returns true als de laatste aanroep van getRekening of maakOver voor deze
 	 *          sessie minder dan GELDIGHEIDSDUUR geleden is
@@ -48,5 +49,5 @@ public interface IBankiersessie extends Remote {
 	 *             als de sessieId niet geldig of verlopen is
 	 * @throws RemoteException
 	 */
-	IRekening getRekening() throws InvalidSessionException, RemoteException;
+	IRekening getRekening() throws InvalidSessionException, RemoteException;	
 }

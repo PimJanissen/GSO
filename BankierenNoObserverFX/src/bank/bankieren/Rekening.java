@@ -1,17 +1,14 @@
 package bank.bankieren;
 
-import fontyspublisher.IRemotePropertyListener;
-import fontyspublisher.Publisher;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
+import java.util.Observable;
 
-class Rekening extends UnicastRemoteObject implements IRekeningTbvBank
+public class Rekening extends Observable implements IRekeningTbvBank
 {
 
 	private static final long serialVersionUID = 7221569686169173632L;
 	private static final int KREDIETLIMIET = -10000;
-
-	private final transient Publisher publisher;
+	
 	private int nr;
 	private IKlant eigenaar;
 	private Money saldo;
@@ -47,9 +44,6 @@ class Rekening extends UnicastRemoteObject implements IRekeningTbvBank
 		this.nr = number;
 		this.eigenaar = klant;
 		this.saldo = saldo;
-
-		this.publisher = new Publisher();
-		this.publisher.registerProperty("Saldo");
 	}
 
 	public boolean equals(Object obj)
@@ -91,8 +85,9 @@ class Rekening extends UnicastRemoteObject implements IRekeningTbvBank
 
 		if (isTransferPossible(bedrag))
 		{
-			saldo = Money.sum(saldo, bedrag);
-			this.publisher.inform("Saldo", null, saldo);
+			this.saldo = Money.sum(saldo, bedrag);
+			this.setChanged();
+			this.notifyObservers(this.saldo);
 			return true;
 		}
 		return false;
@@ -102,17 +97,5 @@ class Rekening extends UnicastRemoteObject implements IRekeningTbvBank
 	public int getKredietLimietInCenten()
 	{
 		return KREDIETLIMIET;
-	}
-
-	@Override
-	public void subscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
-	{
-		this.publisher.subscribeRemoteListener(listener, property);
-	}
-
-	@Override
-	public void unsubscribeRemoteListener(IRemotePropertyListener listener, String property) throws RemoteException
-	{
-		this.publisher.unsubscribeRemoteListener(listener, property);
 	}
 }

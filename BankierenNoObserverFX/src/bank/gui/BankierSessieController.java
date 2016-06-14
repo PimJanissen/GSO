@@ -26,6 +26,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import util.PropertyNames;
 
 /**
  * FXML Controller class
@@ -67,14 +68,22 @@ public class BankierSessieController extends UnicastRemoteObject implements Init
 	{
 		this.balie = balie;
 		this.sessie = sessie;
+		
+		try
+		{
+			this.sessie.subscribeRemoteListener(this, PropertyNames.SALDO);
+		}
+		catch (RemoteException ex)
+		{
+			Logger.getLogger(BankierSessieController.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		
 		this.application = application;
 		
 		IRekening rekening;
 		try
 		{
 			rekening = sessie.getRekening();
-			
-			rekening.subscribeRemoteListener(this, "saldo");
 			
 			tfAccountNr.setText(rekening.getNr() + "");
 			tfBalance.setText(rekening.getSaldo() + "");

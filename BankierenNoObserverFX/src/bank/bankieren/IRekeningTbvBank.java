@@ -1,8 +1,5 @@
 package bank.bankieren;
 
-import fontyspublisher.IRemotePublisherForDomain;
-import fontyspublisher.IRemotePublisherForListener;
-
 interface IRekeningTbvBank extends IRekening {
 	/**
 	 * het saldo van deze bankrekening wordt met bedrag aangepast, tenzij het
