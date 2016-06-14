@@ -1,133 +1,122 @@
 package bank.bankieren;
 
 import fontys.util.*;
-import fontyspublisher.IRemotePropertyListener;
-import fontyspublisher.IRemotePublisherForListener;
 import java.rmi.RemoteException;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Bank implements IBank
-{
+/**
+ *
+ * @author J.H.L.M. Janssen
+ * @author P.Janissen
+ */
+public class Bank implements IBank {
 
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = -8728841131739353765L;
-	
-	private Map<Integer, IRekeningTbvBank> accounts;
-	private Collection<IKlant> clients;
-	private int nieuwReknr;
-	private String name;
+    /**
+     *
+     */
+    private static final long serialVersionUID = -8728841131739353765L;
 
-	public Bank(String name)
-	{
-		accounts = new HashMap<Integer, IRekeningTbvBank>();
-		clients = new ArrayList<IKlant>();
-		nieuwReknr = 100000000;
-		this.name = name;
-	}
+    private Map<Integer, IRekeningTbvBank> accounts;
+    private Collection<IKlant> clients;
+    private int nieuwReknr;
+    private String name;
+    private Lock lock;
 
-	public int openRekening(String name, String city)
-	{
-		if (name == null || city == null)
-		{
-			throw new IllegalArgumentException();
-		}
+    public Bank(String name) {
+        accounts = new HashMap<Integer, IRekeningTbvBank>();
+        clients = new ArrayList<IKlant>();
+        nieuwReknr = 100000000;
+        this.name = name;
+    }
 
-		if (name.equals("") || city.equals(""))
-		{
-			return -1;
-		}
+    public int openRekening(String name, String city) {
+        if (name == null || city == null) {
+            throw new IllegalArgumentException();
+        }
 
-		IKlant klant = getKlant(name, city);
-		IRekeningTbvBank account = null;
-		try
-		{
-			account = new Rekening(nieuwReknr, klant, Money.EURO);
-		}
-		catch (RemoteException ex)
-		{
-			Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		accounts.put(nieuwReknr, account);
-		nieuwReknr++;
-		return nieuwReknr - 1;
-	}
+        if (name.equals("") || city.equals("")) {
+            return -1;
+        }
 
-	private IKlant getKlant(String name, String city)
-	{
-		for (IKlant k : clients)
-		{
-			if (k.getNaam().equals(name) && k.getPlaats().equals(city))
-			{
-				return k;
-			}
-		}
-		IKlant klant = new Klant(name, city);
-		clients.add(klant);
-		return klant;
-	}
+        lock.lock();
+        IKlant klant = getKlant(name, city);
+        IRekeningTbvBank account = null;
+        try {
+            account = new Rekening(nieuwReknr, klant, Money.EURO);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            lock.unlock();
+        }
+        accounts.put(nieuwReknr, account);
+        nieuwReknr++;
+        lock.unlock();
+        return nieuwReknr - 1;
+    }
 
-	public IRekening getRekening(int nr)
-	{
-		return accounts.get(nr);
-	}
+    private IKlant getKlant(String name, String city) {
+        for (IKlant k : clients) {
+            if (k.getNaam().equals(name) && k.getPlaats().equals(city)) {
+                return k;
+            }
+        }
+        IKlant klant = new Klant(name, city);
+        clients.add(klant);
+        return klant;
+    }
 
-	public boolean maakOver(int source, int destination, Money money)
-			throws NumberDoesntExistException
-	{
+    public IRekening getRekening(int nr) {
+        return accounts.get(nr);
+    }
 
-		if (money == null)
-		{
-			throw new IllegalArgumentException();
-		}
+    public boolean maakOver(int source, int destination, Money money)
+            throws NumberDoesntExistException {
 
-		if (source == destination)
-		{
-			throw new IllegalArgumentException(
-					"cannot transfer money to your own account");
-		}
-		if (!money.isPositive())
-		{
-			throw new IllegalArgumentException("money must be positive");
-		}
+        if (money == null) {
+            throw new IllegalArgumentException();
+        }
 
-		IRekeningTbvBank source_account = (IRekeningTbvBank) getRekening(source);
-		if (source_account == null)
-		{
-			throw new NumberDoesntExistException("account " + source
-					+ " unknown at " + name);
-		}
+        if (source == destination) {
+            throw new IllegalArgumentException(
+                    "cannot transfer money to your own account");
+        }
+        if (!money.isPositive()) {
+            throw new IllegalArgumentException("money must be positive");
+        }
 
-		Money negative = Money.difference(new Money(0, money.getCurrency()),
-				money);
-		boolean success = source_account.muteer(negative);
-		if (!success)
-		{
-			return false;
-		}
+        IRekeningTbvBank source_account = (IRekeningTbvBank) getRekening(source);
+        if (source_account == null) {
+            throw new NumberDoesntExistException("account " + source
+                    + " unknown at " + name);
+        }
 
-		IRekeningTbvBank dest_account = (IRekeningTbvBank) getRekening(destination);
-		if (dest_account == null)
-		{
-			throw new NumberDoesntExistException("account " + destination
-					+ " unknown at " + name);
-		}
-		success = dest_account.muteer(money);
+        Money negative = Money.difference(new Money(0, money.getCurrency()),
+                money);
+        boolean success = source_account.muteer(negative);
+        if (!success) {
+            return false;
+        }
 
-		if (!success) // rollback
-		{
-			source_account.muteer(money);
-		}
-		return success;
-	}
+        IRekeningTbvBank dest_account = (IRekeningTbvBank) getRekening(destination);
+        if (dest_account == null) {
+            throw new NumberDoesntExistException("account " + destination
+                    + " unknown at " + name);
+        }
+        success = dest_account.muteer(money);
 
-	@Override
-	public String getName()
-	{
-		return name;
-	}
+        if (!success) // rollback
+        {
+            source_account.muteer(money);
+        }
+        return success;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
 }
