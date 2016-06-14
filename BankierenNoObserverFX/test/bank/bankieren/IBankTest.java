@@ -13,6 +13,7 @@ import org.junit.Test;
 /**
  *
  * @author Pim Janissen
+ * @author J.H.L.M. Janssen
  */
 public class IBankTest {
 
