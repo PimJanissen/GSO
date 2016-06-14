@@ -24,7 +24,8 @@ public class Bank implements IBank {
     private Collection<IKlant> clients;
     private int nieuwReknr;
     private String name;
-    private Lock lock;
+    private Lock rekeningLock;
+    private Lock overboekenLock;
 
     public Bank(String name) {
         accounts = new HashMap<Integer, IRekeningTbvBank>();
@@ -42,7 +43,7 @@ public class Bank implements IBank {
             return -1;
         }
 
-        lock.lock();
+        rekeningLock.lock();
         IKlant klant = getKlant(name, city);
         IRekeningTbvBank account = null;
         try {
@@ -50,11 +51,11 @@ public class Bank implements IBank {
         } catch (RemoteException ex) {
             Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            lock.unlock();
+            rekeningLock.unlock();
         }
         accounts.put(nieuwReknr, account);
         nieuwReknr++;
-        lock.unlock();
+        rekeningLock.unlock();
         return nieuwReknr - 1;
     }
 
@@ -94,17 +95,23 @@ public class Bank implements IBank {
                     + " unknown at " + name);
         }
 
+        overboekenLock.lock();
         Money negative = Money.difference(new Money(0, money.getCurrency()),
                 money);
         boolean success = source_account.muteer(negative);
         if (!success) {
+            overboekenLock.unlock();
             return false;
         }
 
         IRekeningTbvBank dest_account = (IRekeningTbvBank) getRekening(destination);
-        if (dest_account == null) {
-            throw new NumberDoesntExistException("account " + destination
-                    + " unknown at " + name);
+        try {
+            if (dest_account == null) {
+                throw new NumberDoesntExistException("account " + destination
+                        + " unknown at " + name);
+            }
+        } finally {
+            overboekenLock.unlock();
         }
         success = dest_account.muteer(money);
 
@@ -112,6 +119,7 @@ public class Bank implements IBank {
         {
             source_account.muteer(money);
         }
+        overboekenLock.unlock();
         return success;
     }
 
