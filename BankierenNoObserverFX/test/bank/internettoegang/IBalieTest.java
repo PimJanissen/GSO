@@ -7,6 +7,7 @@ package bank.internettoegang;
 
 import bank.bankieren.Bank;
 import bank.bankieren.IBank;
+import bank.centrale.Centrale;
 import java.rmi.RemoteException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,7 +26,7 @@ public class IBalieTest
 	@Before
 	public void setUp() throws RemoteException
 	{
-		this.iBank = new Bank("Rabobank");
+		this.iBank = new Bank("Rabobank", new Centrale());
 		this.iBalie = new Balie(this.iBank);
 	}
 

@@ -4,8 +4,7 @@ import java.rmi.*;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import bank.bankieren.*;
-import fontyspublisher.IRemotePropertyListener;
-import fontyspublisher.IRemotePublisherForListener;
+import bank.centrale.ICentrale;
 
 public class Balie extends UnicastRemoteObject implements IBalie
 {
@@ -15,13 +14,17 @@ public class Balie extends UnicastRemoteObject implements IBalie
 	private HashMap<String, ILoginAccount> loginaccounts;
 	//private Collection<IBankiersessie> sessions;
 	private java.util.Random random;
+	
+	private ICentrale centrale;
 
 	public Balie(IBank bank) throws RemoteException
 	{
 		this.bank = bank;
-		loginaccounts = new HashMap<String, ILoginAccount>();
+		this.loginaccounts = new HashMap<String, ILoginAccount>();
 		//sessions = new HashSet<IBankiersessie>();
-		random = new Random();
+		this.random = new Random();
+		
+		this.centrale = centrale;
 	}
 
 	public String openRekening(String naam, String plaats, String wachtwoord)
@@ -102,5 +105,4 @@ public class Balie extends UnicastRemoteObject implements IBalie
 		}
 		return s.toString();
 	}
-
 }

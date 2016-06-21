@@ -7,8 +7,8 @@ package bank.internettoegang;
 
 import bank.bankieren.Bank;
 import bank.bankieren.IBank;
-import bank.bankieren.IRekening;
 import bank.bankieren.Money;
+import bank.centrale.Centrale;
 import fontys.util.InvalidSessionException;
 import fontys.util.NumberDoesntExistException;
 import java.rmi.RemoteException;
@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -33,7 +32,7 @@ public class IBankiersessieTest
 	@Before
 	public void setUp() throws RemoteException
 	{
-		this.iBank = new Bank("Rabobank");
+		this.iBank = new Bank("Rabobank", new Centrale());
 		this.rekeningnummer = this.iBank.openRekening("Erik Janssen", "Eindhoven");
 
 		this.iBankiersessie = new Bankiersessie(this.rekeningnummer, this.iBank);
