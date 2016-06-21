@@ -42,7 +42,7 @@ public interface ICentrale extends Remote
 	 * given rekeningnummer.
 	 *
 	 * @param bank The bank which the rekening belongs to.
-	 * @param rekening The rekening to withdraw the amount from.
+	 * @param rekeningNummer The number of the rekening to withdraw the amount from.
 	 * @param tegenrekeningNummer The number of the rekening to transfer the
 	 * amount to.
 	 * @param bedrag The amount to transfer.
@@ -52,7 +52,7 @@ public interface ICentrale extends Remote
 	 * @throws java.rmi.RemoteException when an unexpected RMI related error
 	 * occurs.
 	 */
-	public boolean transfer(IBank bank, IRekeningTbvBank rekening, int tegenrekeningNummer, Money bedrag) throws RemoteException;
+	public boolean transfer(IBank bank, int rekeningNummer, int tegenrekeningNummer, Money bedrag) throws RemoteException;
 
 	/**
 	 * Gets a new rekeningnummer from this central which is unique to all the

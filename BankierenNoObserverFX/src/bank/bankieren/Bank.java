@@ -1,5 +1,6 @@
 package bank.bankieren;
 
+import bank.centrale.IBankTbvCentrale;
 import bank.centrale.ICentrale;
 import fontys.util.*;
 import java.io.Serializable;
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
  * @author J.H.L.M. Janssen
  * @author P.Janissen
  */
-public class Bank extends UnicastRemoteObject implements IBank, Serializable
+public class Bank extends UnicastRemoteObject implements IBankTbvCentrale, Serializable
 {
 
 	/**
@@ -114,6 +115,20 @@ public class Bank extends UnicastRemoteObject implements IBank, Serializable
 					+ " unknown at " + name);
 		}
 
+		IRekening iRekening = this.getRekening(destination);
+
+		if (iRekening == null)
+		{
+			try
+			{
+				return this.centrale.transfer(this, source, destination, money);
+			}
+			catch (RemoteException ex)
+			{
+				Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
+
 		Money negative = Money.difference(new Money(0, money.getCurrency()),
 				money);
 		boolean success = source_account.muteer(negative);
@@ -122,20 +137,6 @@ public class Bank extends UnicastRemoteObject implements IBank, Serializable
 			return false;
 		}
 
-		IRekening iRekening = this.getRekening(destination);
-		
-		if (iRekening == null)
-		{
-			try
-			{
-				return this.centrale.transfer(this, source_account, destination, money);
-			}
-			catch (RemoteException ex)
-			{
-				Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
-			}
-		}
-		
 		IRekeningTbvBank dest_account = (IRekeningTbvBank) iRekening;
 
 		success = dest_account.muteer(money);
@@ -151,5 +152,12 @@ public class Bank extends UnicastRemoteObject implements IBank, Serializable
 	public String getName()
 	{
 		return name;
+	}
+
+	@Override
+	public boolean muteer(int rekeningNummer, Money bedrag) throws NumberDoesntExistException, RemoteException
+	{
+		IRekeningTbvBank rekening = (IRekeningTbvBank) this.getRekening(rekeningNummer);
+		return rekening.muteer(bedrag);
 	}
 }

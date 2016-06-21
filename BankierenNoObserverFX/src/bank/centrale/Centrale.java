@@ -6,13 +6,10 @@
 package bank.centrale;
 
 import bank.bankieren.IBank;
-import bank.bankieren.IRekening;
-import bank.bankieren.IRekeningTbvBank;
 import bank.bankieren.Money;
-import java.io.FileNotFoundException;
+import fontys.util.NumberDoesntExistException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -32,7 +29,7 @@ public class Centrale extends UnicastRemoteObject implements ICentrale
 {
 
 	public static final int PORT = 1099;
-	
+
 	private int newRekeningNummer = 1000000;
 
 	private final List<IBank> banks;
@@ -82,66 +79,70 @@ public class Centrale extends UnicastRemoteObject implements ICentrale
 	}
 
 	@Override
-	public boolean transfer(IBank bank, IRekeningTbvBank rekening, int tegenrekeningNummer, Money bedrag)
+	public boolean transfer(IBank bank, int rekeningNummer, int tegenrekeningNummer, Money bedrag) throws RemoteException
 	{
 		if (bank == null)
 		{
 			throw new IllegalArgumentException("Bank can not be null.");
 		}
-		if (rekening == null)
-		{
-			throw new IllegalArgumentException("Bank can not be null");
-		}
-		if (rekening.getNr() == tegenrekeningNummer)
-		{
 
-		}
-		IRekeningTbvBank tegenRekening = (IRekeningTbvBank) this.findRekening(tegenrekeningNummer, bank);
+		IBankTbvCentrale rekeningBank = (IBankTbvCentrale) bank;
+
+		IBankTbvCentrale tegenRekeningBank = (IBankTbvCentrale) this.findBank(tegenrekeningNummer);
 
 		Money negative = Money.difference(new Money(0, bedrag.getCurrency()),
 				bedrag);
-		boolean success = rekening.muteer(negative);
+		boolean success = false;
+		try
+		{
+			success = rekeningBank.muteer(rekeningNummer, negative);
+		}
+		catch (NumberDoesntExistException ex)
+		{
+			Logger.getLogger(Centrale.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		
 		if (!success)
 		{
 			return false;
 		}
 
-		success = tegenRekening.muteer(bedrag);
+		try
+		{
+			success = tegenRekeningBank.muteer(tegenrekeningNummer, bedrag);
+		}
+		catch (NumberDoesntExistException ex)
+		{
+			Logger.getLogger(Centrale.class.getName()).log(Level.SEVERE, null, ex);
+		}
 
 		if (!success) // rollback
 		{
-			rekening.muteer(bedrag);
+			try
+			{
+				rekeningBank.muteer(rekeningNummer, bedrag);
+			}
+			catch (NumberDoesntExistException ex)
+			{
+				Logger.getLogger(Centrale.class.getName()).log(Level.SEVERE, null, ex);
+			}
 		}
 		return success;
 	}
 
 	/**
-	 * Finds a rekenig with the given nummer in the list of registered banks.
+	 * Finds the bank which has a rekening with the given nummer in the list of
+	 * registered banks.
 	 *
 	 * @param rekeningNummer The nummer to find.
-	 * @param excludedBank The bank to exclude from the search. Can be null.
-	 * @return The found rekening.
 	 */
-	private IRekening findRekening(int rekeningNummer, IBank excludedBank)
+	private IBank findBank(int rekeningNummer) throws RemoteException
 	{
-		IRekening rekening = null;
 		for (IBank bank : this.banks)
 		{
-			if (bank != excludedBank)
+			if (bank.getRekening(rekeningNummer) != null)
 			{
-				try
-				{
-					rekening = bank.getRekening(rekeningNummer);
-				}
-				catch (RemoteException ex)
-				{
-					Logger.getLogger(Centrale.class.getName()).log(Level.SEVERE, null, ex);
-				}
-
-				if (rekening != null)
-				{
-					return rekening;
-				}
+				return bank;
 			}
 		}
 
@@ -169,7 +170,7 @@ public class Centrale extends UnicastRemoteObject implements ICentrale
 			props.setProperty(bindingName, rmiCentrale);
 
 			props.store(out, null);
-			
+
 			Registry registry = LocateRegistry.createRegistry(Centrale.PORT);
 			registry.bind(bindingName, this);
 		}
