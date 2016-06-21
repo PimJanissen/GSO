@@ -5,6 +5,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import bank.bankieren.*;
 import bank.centrale.ICentrale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Balie extends UnicastRemoteObject implements IBalie
 {
@@ -49,7 +51,15 @@ public class Balie extends UnicastRemoteObject implements IBalie
 			return null;
 		}
 
-		int nr = bank.openRekening(naam, plaats);
+		int nr = -1;
+		try
+		{
+			nr = bank.openRekening(naam, plaats);
+		}
+		catch (RemoteException ex)
+		{
+			Logger.getLogger(Balie.class.getName()).log(Level.SEVERE, null, ex);
+		}
 		if (nr == -1)
 		{
 			return null;

@@ -6,6 +6,7 @@
 package bank.server;
 
 import bank.bankieren.Bank;
+import bank.centrale.Centrale;
 import bank.centrale.ICentrale;
 import bank.gui.BankierClient;
 import bank.internettoegang.Balie;
@@ -34,7 +35,6 @@ import static javafx.application.Application.launch;
  */
 public class BalieServer extends Application
 {
-	private int port;
 	private Stage stage;
 	private final double MINIMUM_WINDOW_WIDTH = 600.0;
 	private final double MINIMUM_WINDOW_HEIGHT = 200.0;
@@ -45,7 +45,6 @@ public class BalieServer extends Application
 	@Override
 	public void start(Stage primaryStage) throws IOException
 	{
-		this.port = 1099;
 		try
 		{
 			stage = primaryStage;
@@ -73,13 +72,12 @@ public class BalieServer extends Application
 			this.nameBank = nameBank;
 			String address = java.net.InetAddress.getLocalHost().getHostAddress();
 			Properties props = new Properties();
-			String rmiBalie = address + ":" + port + "/" + nameBank;
+			String rmiBalie = address + ":" + Centrale.PORT + "/" + nameBank;
 			props.setProperty("balie", rmiBalie);
 			out = new FileOutputStream(nameBank + ".props");
 			props.store(out, null);
 			out.close();
-			java.rmi.registry.LocateRegistry.createRegistry(port);
-			this.port++;
+			java.rmi.registry.LocateRegistry.getRegistry(Centrale.PORT);
 			Bank newBank = new Bank(nameBank, this.centrale);
 			IBalie balie = new Balie(newBank);
 			Naming.rebind(nameBank, balie);

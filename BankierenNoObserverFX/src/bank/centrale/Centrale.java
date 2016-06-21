@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 public class Centrale extends UnicastRemoteObject implements ICentrale
 {
 
+	public static final int PORT = 1099;
+	
 	private int newRekeningNummer = 1000000;
 
 	private final List<IBank> banks;
@@ -51,9 +53,16 @@ public class Centrale extends UnicastRemoteObject implements ICentrale
 
 		for (IBank registedBank : this.banks)
 		{
-			if (registedBank.getName().equals(bank.getName()))
+			try
 			{
-				return false;
+				if (registedBank.getName().equals(bank.getName()))
+				{
+					return false;
+				}
+			}
+			catch (RemoteException ex)
+			{
+				Logger.getLogger(Centrale.class.getName()).log(Level.SEVERE, null, ex);
 			}
 		}
 
@@ -115,12 +124,19 @@ public class Centrale extends UnicastRemoteObject implements ICentrale
 	 */
 	private IRekening findRekening(int rekeningNummer, IBank excludedBank)
 	{
-		IRekening rekening;
+		IRekening rekening = null;
 		for (IBank bank : this.banks)
 		{
 			if (bank != excludedBank)
 			{
-				rekening = bank.getRekening(rekeningNummer);
+				try
+				{
+					rekening = bank.getRekening(rekeningNummer);
+				}
+				catch (RemoteException ex)
+				{
+					Logger.getLogger(Centrale.class.getName()).log(Level.SEVERE, null, ex);
+				}
 
 				if (rekening != null)
 				{
@@ -148,14 +164,13 @@ public class Centrale extends UnicastRemoteObject implements ICentrale
 		{
 
 			String address = java.net.InetAddress.getLocalHost().getHostAddress();
-			int port = 2622;
 			Properties props = new Properties();
-			String rmiCentrale = address + ":" + port + "/" + bindingName;
+			String rmiCentrale = address + ":" + Centrale.PORT + "/" + bindingName;
 			props.setProperty(bindingName, rmiCentrale);
 
 			props.store(out, null);
 			
-			Registry registry = LocateRegistry.createRegistry(port);
+			Registry registry = LocateRegistry.createRegistry(Centrale.PORT);
 			registry.bind(bindingName, this);
 		}
 		catch (AlreadyBoundException | IOException ex)
